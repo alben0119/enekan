@@ -1,0 +1,16 @@
+{
+  "name": "エネ管ドリル — エネルギー管理士 課目Ⅲ・Ⅳ",
+  "short_name": "エネ管",
+  "description": "エネルギー管理士（電気分野）課目Ⅲ・Ⅳ対策の穴埋め形式ドリルと公式カード",
+  "lang": "ja",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#101214",
+  "theme_color": "#0b7a5e",
+  "icons": [
+    { "src": "icons/icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
