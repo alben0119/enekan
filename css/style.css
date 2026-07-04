@@ -268,6 +268,39 @@ button.btn.danger { background: var(--ng); }
   color: var(--accent);
 }
 
+/* ---------- drill question list ---------- */
+.qrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 46px;
+  padding: 8px 8px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: none;
+  color: var(--text);
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.qrow:last-child { border-bottom: none; }
+.q-st {
+  flex: none;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+.q-st.new { background: var(--border); color: var(--text-sub); }
+.q-st.ok { background: var(--ok-soft); color: var(--ok); }
+.q-st.ng { background: var(--ng-soft); color: var(--ng); }
+.q-no { flex: none; width: 22px; color: var(--text-sub); font-variant-numeric: tabular-nums; }
+.q-stem { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
 /* ---------- quiz ---------- */
 .quiz-top {
   display: flex;

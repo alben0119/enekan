@@ -132,7 +132,10 @@
 
   var routes = {
     home: renderHome,
-    drill: renderDrillMenu,
+    drill: function (args) {
+      if (args && args[0]) renderDrillList(args[0]);
+      else renderDrillMenu();
+    },
     exam: renderExamMenu,
     review: renderReviewMenu,
     cards: renderCards,
@@ -280,18 +283,83 @@
     });
     view.querySelectorAll('[data-cat]').forEach(function (b) {
       b.addEventListener('click', function () {
-        startDrill(b.getAttribute('data-cat'));
+        location.hash = '#drill/' + b.getAttribute('data-cat');
       });
     });
   }
 
-  function startDrill(catId) {
+  /* 問題の状態: 'new'=未挑戦, 'ok'=クリア済み（直近正解で復習対象外）, 'ng'=要復習・不正解 */
+  function questionState(qid) {
+    var r = Store.stats()[qid];
+    if (!r || r.a === 0) return 'new';
+    return (r.streak > 0 && !r.rev) ? 'ok' : 'ng';
+  }
+
+  /* 分野内の問題一覧（任意の問題から開始／未習・間違いのみ） */
+  function renderDrillList(catId) {
+    var cat = catById(catId);
+    var qs = questionsOf(catId);
+    if (!cat || !qs.length) { location.hash = '#drill'; return; }
+    setHeader(cat.name, '#drill');
+    var st = Store.stats();
+    var pending = 0, listHtml = '';
+    qs.forEach(function (q, i) {
+      var state = questionState(q.id);
+      if (state !== 'ok') pending += 1;
+      var mark = state === 'new' ? '<span class="q-st new">未</span>' :
+                 state === 'ok' ? '<span class="q-st ok">○</span>' : '<span class="q-st ng">×</span>';
+      listHtml +=
+        '<button class="qrow" type="button" data-from="' + q.id + '">' +
+        mark +
+        '<span class="q-no">' + (i + 1) + '</span>' +
+        '<span class="q-stem">' + esc(stripTags(q.stem)).slice(0, 26) + '…</span>' +
+        '</button>';
+    });
+
+    view.innerHTML =
+      '<div class="panel">' +
+      '<button class="btn" id="dlPending" type="button"' + (pending ? '' : ' disabled') + '>未習・間違いのみ解く（' + pending + '問）</button>' +
+      '<div class="btn-row" style="margin-top:10px">' +
+      '<button class="btn secondary" id="dlAll" type="button">最初から順番に</button>' +
+      '<button class="btn secondary" id="dlRandom" type="button">ランダム</button>' +
+      '</div></div>' +
+      '<div class="section-title">問題一覧（タップするとそこから順番に出題）</div>' +
+      '<div class="panel" style="padding:6px 8px">' + listHtml + '</div>';
+
+    document.getElementById('dlPending').addEventListener('click', function () {
+      startDrill(catId, { pendingOnly: true });
+    });
+    document.getElementById('dlAll').addEventListener('click', function () {
+      startDrill(catId, { order: 'seq' });
+    });
+    document.getElementById('dlRandom').addEventListener('click', function () {
+      startDrill(catId, { order: 'random' });
+    });
+    view.querySelectorAll('.qrow').forEach(function (b) {
+      b.addEventListener('click', function () {
+        startDrill(catId, { fromId: b.getAttribute('data-from') });
+      });
+    });
+  }
+
+  /* opts: { order:'seq'|'random', fromId: 開始問題id, pendingOnly: 未習・間違いのみ } */
+  function startDrill(catId, opts) {
+    opts = opts || {};
     var qs = questionsOf(catId);
     if (!qs.length) return;
-    var settings = Store.settings();
+    var order = opts.order || Store.settings().drillOrder;
     var ids = qs.map(function (q) { return q.id; });
-    if (settings.drillOrder === 'random') ids = shuffle(ids);
-    S = { kind: 'drill', title: catById(catId).name, back: '#drill', ids: ids, idx: 0, correct: 0, answered: false };
+    if (opts.pendingOnly) {
+      ids = ids.filter(function (id) { return questionState(id) !== 'ok'; });
+      if (!ids.length) return;
+    }
+    if (opts.fromId) {
+      var from = ids.indexOf(opts.fromId);
+      if (from > 0) ids = ids.slice(from).concat(ids.slice(0, from)); // 選んだ問題から末尾まで→先頭に戻る
+    } else if (order === 'random') {
+      ids = shuffle(ids);
+    }
+    S = { kind: 'drill', title: catById(catId).name, back: '#drill/' + catId, ids: ids, idx: 0, correct: 0, answered: false };
     if (location.hash === '#quiz') route(); // 「もう一度」など既に#quizにいる場合はhashchangeが発火しない
     else location.hash = '#quiz';
   }

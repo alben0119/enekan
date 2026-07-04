@@ -1,5 +1,5 @@
 /* エネ管ドリル — Service Worker（オフライン用プリキャッシュ） */
-var CACHE = 'enekan-v1';
+var CACHE = 'enekan-v2';
 var ASSETS = [
   './',
   './index.html',
